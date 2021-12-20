@@ -3,27 +3,40 @@ import time
 import threading
 import random
 import sys
+import os
 
 window = tkinter.Tk()
 window.title("FPS Trainer")
 window.geometry("500x350")
 window.config(bg="red")
-
+def threadprint():
+    # print(threading.active_count())
+    pass
+threadprint()
 list = ["Press W", "Press A", "Press D", "Press S", "Press Space", "Single Click", "Double Click", "Triple Click"]
 popUp = 0
+condition = threading.Condition()
 inputTime = 0
-t = 0
+t = 20
 score = 0
 pointVar = tkinter.StringVar()
 pointVar = str(score) + " Point(s)"
 exit_event = threading.Event()
+pop_event = threading.Event()
+flag = threading.Event()
+
 
 def reset():
+    # os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
     global t, score, exit_event, start, popUp, start, inputTime
     popUp.destroy()
+    exit_event.set()
     exit_event.clear()
-    t = 0
-    inputTime = 0
+    # print(helpA.is_alive())
+    # print(countdown_thread.is_alive())
+    # print(threading_checkState.is_alive())
+    threadprint()
+    t = 20
     score = 0
     pointVar = str(score) + " Point(s)"
     points.config(text=pointVar)
@@ -52,6 +65,8 @@ def popup():
         height= 1,
         command=reset
     )
+    print(threading.active_count())
+    print(countdown_thread.is_alive())
     retry.pack()
     retry.place(anchor= "s", x= 50, y=150)
     def stop():
@@ -64,7 +79,7 @@ def popup():
         height= 1,
         command=stop
     )
-    pointVar = "You got " + str(score) + " points. \n Try again?" 
+    pointVar = str(score) + " Point(s)"
     label1 = tkinter.Label(
     popUp,
     text = pointVar
@@ -94,8 +109,9 @@ def bindVar(var):
         return "<Triple-Button-1>"
 
 def f_randomLabel():
+    global pop_event
     if t == 0:
-        popup()
+        pop_event.set()
     else:    
         global pointVar
         randBind = random.choice(list)
@@ -131,37 +147,48 @@ def f_randomLabel():
                 exit_event.clear()
                 if t == 0:
                     randomLabel.destroy()
-                    popup()
-                pass
+                    if "Press" in randBind:
+                        window.unbind(var1)
+                    global pop_event
+                    pop_event.set()
             else:
                 randomLabel.destroy()
                 if "Press" in randBind:
                     window.unbind(var1)
                 f_randomLabel()
         def help_thread():
+            global helpA
             helpA = threading.Thread(target=help)
             helpA.daemon = True
             helpA.start()
         help_thread()
+        threadprint()
 
 
 
 
 def countdown():
     global t
-    global currentTime
-    while t != 0 :
-        time.sleep(1)
-        t -= 1
-        currentTime = ("time: " + str(t))
-        timer.config(text=currentTime)
-    exit_event.set()
+    global currentTime, flag, condition
+    while True: 
+        if flag.wait():
+            flag.clear()
+            while t != 0 :
+                time.sleep(1)
+                t -= 1
+                currentTime = ("time: " + str(t))
+                timer.config(text=currentTime)
+            exit_event.set()
+            popup()
+
 
 
 def f_timer():
+    global countdown_thread
     countdown_thread = threading.Thread(target = countdown)
     countdown_thread.daemon = True
     countdown_thread.start()
+    threadprint()
  
 timer = tkinter.Label(
     window,
@@ -199,15 +226,33 @@ def askTime():
     time_entry.icursor(2)
 
 def f_start():
-    global t, inputTime, currentTime
+    global t, inputTime, currentTime, flag, condition
     t = inputTime.get()
     currentTime = ("time: " + str(t))
     timer.config(text=currentTime)
     start.destroy()
     time_label.destroy()
     time_entry.destroy()
-    f_timer()
+    flag.set()
+    # f_checkState()
     f_randomLabel()
+
+
+def checkState():
+    global pop_event, exit_event
+    if pop_event.wait():
+        pop_event.clear()
+        exit_event.set()
+        popup()
+        print("hoi")
+
+# def f_checkState():
+#     global threading_checkState
+#     threading_checkState = threading.Thread(target=checkState)
+#     threading_checkState.start()
+    
+
+f_timer()
 askTime()
 start = tkinter.Button(
     window,
