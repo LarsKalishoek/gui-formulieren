@@ -244,7 +244,7 @@ def checkState():
         pop_event.clear()
         exit_event.set()
         popup()
-        print("hoi")
+        
 
 # def f_checkState():
 #     global threading_checkState
