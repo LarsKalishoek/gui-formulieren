@@ -16,10 +16,6 @@ for x in range(10):
         else:
             b="white"
             z=0
-        label = tkinter.Label(frame,
-        padx=40.6,
-        pady=30.7,
-        bg=b
-        ).grid(row=y,column=x)
+        label = tkinter.Label(frame,padx=40.6,pady=30.7,bg=b).grid(row=y,column=x)
 frame.pack(expand=True)
 window.mainloop()
